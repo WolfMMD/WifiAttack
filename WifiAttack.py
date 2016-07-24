@@ -105,7 +105,7 @@ def parse_args():
     parser.add_argument("-rmac", "--routermac",
                         help="设置 router MAC ; 通过默认的脚本加入一些不同的方式用来获得这个选项 ")
     parser.add_argument("-pcap", "--pcap", 
-                        help="Parse through a pcap file")
+                        help="分析pcap文件")
 
     return parser.parse_args()
 
@@ -1146,7 +1146,27 @@ def threads(args):
             print '[-] 不能开启 SEToolkit,继续...'
 
 
+def pcap_handler(args):
+    global victimIP
+    bad_args = [args.dnsspoof, args.beef, args.code, args.nmap, args.nmapaggressive, args.driftnet, args.interface]
+    for x in bad_args:
+        if x:
+            exit(
+                '[-] 从PCAP文件中读取数据时，需要包括以下参数 -v, -u, -p, -pcap [pcap filename], 和 -ip [目标 IP address]')
+    if args.pcap:
+        if args.ipaddress:
+            victimIP = args.ipaddress
+            pcap = rdpcap(args.pcap)
+            for payload in pcap:
+                Parser(args).start(payload)
+            exit('[-] 完成分析 pcap 文件')
+        else:
+            exit('[-] 从PCAP文件中读取时，请包括下列实际参数: -ip [target\'s IP address]')
+    else:
+        exit(
+            '[-] 当从PCAP文件中读取数据，请包括以下参数: -v, -u, -p, -pcap [pcap filename], 和 -ip [目标 IP address]')
 
+    
     def signal_handler(signal, frame):
         print '学习IP表, 发送 healing packets, 关闭IP转发...'
         logger.close()
